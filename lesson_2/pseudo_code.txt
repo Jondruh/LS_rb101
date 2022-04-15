@@ -1,0 +1,134 @@
+A METHOD THAT RETURNS THE SUM OF TWO INTEGERS
+
+- Get both integers (arguments to the method or user input?)
+- Perform operation and return result
+
+
+START
+
+method(a, b)
+ PRINT a + b
+
+END
+
+
+
+A METHOD THAT TAKES AN ARRAY OF STRINGS, AND RETURNS A STRING THAT IS ALL THOSE STRINGS CONCATENATED TOGETHER
+
+Given an array of strings
+
+Iterate through the array
+- save each value on the end of a string
+
+After iterating return the final string
+
+
+START
+
+# Given an array of strings
+
+SET iterator = 1
+SET empty_string = ""
+
+WHILE iterator <= length of array
+  Add current_string to end of empty_string
+  iterator = iterator + 1
+
+PRINT empty_string
+
+END
+
+
+
+A METHOD THAT TAKES AN ARRAY OF INTEGERS, AND RETURNS A NEW ARRAY WITH EVERY OTHER ELEMENT FROM THE ORIGINAL ARRAY, STARTING WITH THE FIRST ELEMENT
+
+-Get array of integers
+-Save every even index in the array to new array
+-Skip every odd index of the array.
+-Return the new array.
+
+
+START
+
+# Given an array of integers
+
+SET iterator = 0
+SET new_array = []
+
+WHILE iterator < length of array
+  IF iterator is even
+    put integer at index of the iterator in new_array
+  
+  iterator = iterator + 1
+  
+RETURN new_array
+
+END
+
+
+
+A METHOD THAT DETERMINES THE INDEX OF THE 3RD OCCURRENCE OF A GIVEN CHARACTER IN A STRING. FOR INSTANCE, IF THE GIVEN CHARACTER IS 'X' AND THE STRING IS 'AXBXCDXEX', THE METHOD SHOULD RETURN 6 (THE INDEX OF THE 3RD 'X'). IF THE GIVEN CHARACTER DOES NOT OCCUR AT LEAST 3 TIMES, RETURN NIL. 
+
+-Get character to check for in string
+-Get string
+-Iterate over each letter in the string and check if it matches the given character.
+-Once the third instance of the character is found return that index position
+-If we iterate over the whole string without finding three of the given character, return nil.
+
+
+START
+
+# Given a character to look for and a string to look in.
+
+SET index = 0
+SET char_count = 0 
+
+WHILE index < string length
+  IF character at index == given character
+    char_count = char_count + 1
+    
+  IF char_count == 3
+    PRINT index and return
+  
+  index = index + 1
+  
+END
+  
+  
+
+
+A METHOD THAT TAKES TWO ARRAYS OF NUMBERS AND RETURNS THE RESULT OF MERGING THE ARRAYS. THE ELEMENTS OF THE FIRST ARRAY SHOULD BECOME THE ELEMENTS AT THE EVEN INDEXES OF THE RETURNED ARRAY, WHILE THE ELEMENTS OF THE SECOND ARRAY SHOULD BECOME THE ELEMENTS AT THE ODD INDEXES. 
+
+Given two arrays of numbers. (Arrays have same number of elements)
+
+-Iterate equal to the number of elements in one of the arrays
+  -Grab the next number from the first array and add it to the new array
+  -Grab the next number from the second array and add it to the new array
+  
+  
+After iterations are complete, return the new array of merged numbers
+
+
+START
+
+# Given two arrays of equal size filled with numbers
+
+SET index = 0
+SET new_array []
+
+
+WHILE index < array length
+  put element at index location of first array into new_array
+  put element at index location of second array into new_array
+  
+  index = index + 1
+  
+PRINT new_array
+
+END
+
+
+  
+  
+
+  
