@@ -22,8 +22,8 @@ def operation_to_message(op)
   when '4'
     choice = 'Dividing'
   end
-  # Placeholder to simulate some code between the case statement and end of method. 
-  return choice
+  # Placeholder to simulate code between the case statement and end of method.
+  choice
 end
 
 prompt "Welcome to the Calculator! Enter your name:"
@@ -73,7 +73,7 @@ loop do # main loop
     3) Multiply
     4) Divide 
   MSG
- 
+
   prompt(operator_prompt)
 
   operator = ''
@@ -90,15 +90,15 @@ loop do # main loop
   prompt("#{operation_to_message(operator)} the two numbers...")
 
   result = case operator
-    when '1'
-      number1.to_i + number2.to_i
-    when '2'
-      number1.to_i - number2.to_i
-    when '3'
-      number1.to_i * number2.to_i
-    when '4'
-      number1.to_f / number2.to_f
-  end
+           when '1'
+             number1.to_i + number2.to_i
+           when '2'
+             number1.to_i - number2.to_i
+           when '3'
+             number1.to_i * number2.to_i
+           when '4'
+             number1.to_f / number2.to_f
+           end
 
   prompt("The result is #{result}")
 
