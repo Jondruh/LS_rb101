@@ -8,7 +8,15 @@ def prompt(message)
 end
 
 def valid_number?(num)
-  num.to_i != 0
+  !num.match?(/[^0-9]/) # returns false if anything but 0-9
+end
+
+def number?(num)
+  valid_number?(num) || float?(num)
+end
+
+def float?(num)
+    
 end
 
 def operation_to_message(op)
