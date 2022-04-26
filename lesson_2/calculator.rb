@@ -8,7 +8,7 @@ def prompt(message)
 end
 
 def valid_number?(num)
-  !num.match?(/[^0-9]/) # returns false if anything but 0-9
+  num.match?(/^\d+$/) # returns false if anything but digits
 end
 
 def number?(num)
@@ -16,7 +16,7 @@ def number?(num)
 end
 
 def float?(num)
-    
+  /\d/.match?(num) && /^-?\d*\.?\d*$/.match?(num) # checks for float nums
 end
 
 def operation_to_message(op)
@@ -30,7 +30,10 @@ def operation_to_message(op)
   when '4'
     choice = 'Dividing'
   end
-  # Placeholder to simulate code between the case statement and end of method.
+
+  # something = 'example for assignment'
+  # Placeholder to demonstrate safer return value for method
+
   choice
 end
 
@@ -55,7 +58,7 @@ loop do # main loop
     prompt("What is the first number?")
     number1 = gets.chomp
 
-    if valid_number?(number1)
+    if number?(number1)
       break
     else
       prompt("Hmm... That isn't a valid number")
@@ -67,7 +70,7 @@ loop do # main loop
     prompt("What is the second number?")
     number2 = gets.chomp
 
-    if valid_number?(number2)
+    if number?(number2)
       break
     else
       prompt("Hmm... That isn't a valid number")
@@ -99,11 +102,11 @@ loop do # main loop
 
   result = case operator
            when '1'
-             number1.to_i + number2.to_i
+             number1.to_f + number2.to_f
            when '2'
-             number1.to_i - number2.to_i
+             number1.to_f - number2.to_f
            when '3'
-             number1.to_i * number2.to_i
+             number1.to_f * number2.to_f
            when '4'
              number1.to_f / number2.to_f
            end
