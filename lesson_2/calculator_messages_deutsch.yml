@@ -1,0 +1,18 @@
+
+welcome: "Willkommen beim Rechner! Gib deinen Namen ein:"
+valid_name: "Achten Sie darauf, einen gültigen Namen einzugeben"
+greeting: "Hi, "
+first_num: "Was ist die erste Zahl?"
+not_valid: "Hmm ... Das ist keine gültige Nummer"
+second_num: "Was ist die zweite Zahl?"
+operator_prompt: "Welche Operation möchten Sie durchführen?\n
+  1) Hinzufügen\n
+  2) Subtrahieren\n
+  3) Multiplizieren\n
+  4) Teilen\n"
+not_valid_operator: "Musst wählen 1, 2, 3 or 4"
+operator_choice: ["Hinzufügen", "Subtrahieren", "Multiplizieren", "Teilen"]
+operator_message: "die beiden Nummern..."
+result_is: "Das Ergebnis ist "
+perform_another?: "Möchten Sie eine weitere Berechnung durchführen? (Y, neu zu rechnen)"
+thank: "Vielen Dank, dass Sie den Rechner verwenden"

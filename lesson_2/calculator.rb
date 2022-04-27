@@ -4,7 +4,6 @@
 # output the result
 
 require 'yaml'
-MESSAGES = YAML.load_file('calculator_messages.yml')
 
 def prompt(message)
   puts("=> #{message}")
@@ -40,6 +39,21 @@ def operation_to_message(op)
   choice
 end
 
+loop do
+  prompt("Please choose a language: 1) English 2) Deutsch")
+  language = gets.chomp
+
+  case language
+  when '1'
+    MESSAGES = YAML.load_file('calculator_messages_english.yml')
+  when '2'
+    MESSAGES = YAML.load_file('calculator_messages_deutsch.yml')
+  end
+
+  break if defined? MESSAGES
+  prompt("Please choose a valid option")
+end
+
 prompt(MESSAGES['welcome'])
 
 name = ''
@@ -64,7 +78,7 @@ loop do # main loop
     if number?(number1)
       break
     else
-    prompt(MESSAGES['not_valid'])
+      prompt(MESSAGES['not_valid'])
     end
   end
 
@@ -114,4 +128,3 @@ loop do # main loop
 end
 
 prompt(MESSAGES['thank'])
-
