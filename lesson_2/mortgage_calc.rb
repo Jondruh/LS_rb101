@@ -14,6 +14,7 @@
 # n = loan duration in months
 
 require "pry"
+require "bigdecimal"
 
 def get_monthly_payments(loan_amt, monthly_int, loan_dur)
   monthly_payment = loan_amt * (monthly_int / (1 - (1 + monthly_int)**(-loan_dur)))
@@ -31,10 +32,9 @@ end
 
 def get_monthly_interest(loan_duration)
   puts "Next please enter the Annual Percentage Rate. Example: 10.3 for 10.3%"
-  interest = gets.chomp.to_f * 0.01
+  interest = BigDecimal(gets.chomp) * 0.01
   monthly_interest = interest / 12
 end
-
 
 puts "Welcome to the mortgage calculator!"
 
@@ -45,13 +45,9 @@ monthly_payments = (get_monthly_payments(loan_amount, monthly_interest, loan_dur
 total_to_pay = (loan_duration * monthly_payments).round(3)
 total_interest = total_to_pay - loan_amount
 
-binding.pry
-  
 puts "You will need to make #{loan_duration} payments."
-puts "Each payment will be $#{monthly_payments}"
-puts "Your total interest will be $#{total_interest}"
-
-# Getting weird float math, apparently BigDecimal objects are the way to go. or a gem called Money
+puts "Each payment will be $#{monthly_payments.round(2).to_f}"
+puts "Your total interest will be $#{total_interest.round(2).to_f}"
 
 
 
