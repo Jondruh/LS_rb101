@@ -1,61 +1,88 @@
 require "bigdecimal"
 
-def get_mthly_pymnts(loan_amt, mthly_int, loan_dur)
-  loan_amt * (mthly_int / (1 - (1 + mthly_int)**(-loan_dur)))
+def get_monthly_payments(loan_amount, monthly_interest, loan_duration)
+  loan_amount *
+    (monthly_interest / (1 - (1 + monthly_interest)**(-loan_duration)))
 end
 
-def get_loan_amt
-  puts "Please enter the loan amount in dollars"
-  gets.chomp.to_i
+def form_num(num) # Converts floats to two decimal place strings
+  format('%.2f', num)
 end
 
-def get_loan_dur
-  puts "Please enter the loan duration in months"
-  gets.chomp.to_i
+def float?(num)
+  /\d/.match?(num) && /^-?\d*\.?\d*$/.match?(num) # checks for float nums
 end
 
-def get_int_rate
-  puts "Please enter the Annual Percentage Rate. Example: 10.3 for 10.3%"
-  BigDecimal(gets.chomp)
+def integer?(num)
+  /^\d+$/.match?(num.to_s) # checks for integers
 end
 
-def get_amt_dur_rate
-  loan = get_loan_amt
-  dur = get_loan_dur
-  rate = get_int_rate
-
-  return loan, dur, rate
+def valid_num?(num) # Uses two methods to check if num is a valid input
+  integer?(num) || float?(num)
 end
 
-def calc(loan_amt, loan_dur, int_rate)
-  mthly_int = (int_rate * 0.01) / 12
-  mthly_pymnts = (get_mthly_pymnts(loan_amt, mthly_int, loan_dur))
-  ttl_to_pay = (loan_dur * mthly_pymnts)
-  ttl_int = ttl_to_pay - loan_amt
-
-  return mthly_int, mthly_pymnts, ttl_to_pay, ttl_int
+def get_loan_amount
+  loop do
+    puts "Please enter the loan amount in dollars"
+    amount = gets.chomp
+    return amount.to_i if valid_num?(amount)
+  end
 end
 
-def amortization(loan_amt, loan_dur, mthly_int, mthly_pymnts)
-  table = { balance: [], int: [], principal: [], ending_bal: [] }
+def get_loan_duration
+  loop do
+    puts "Please enter the loan duration in months"
+    duration = gets.chomp
+    return duration.to_i if integer?(duration)
+  end
+end
+
+def get_interest_rate
+  loop do
+    puts "Please enter the Annual Percentage Rate. Example: 10.3 for 10.3%"
+    rate = gets.chomp
+    return BigDecimal(rate) if valid_num?(rate)
+  end
+end
+
+def get_amount_duration_rate
+  loan = get_loan_amount
+  duration = get_loan_duration
+  rate = get_interest_rate
+
+  return loan, duration, rate
+end
+
+def calc(loan_amount, loan_duration, interest_rate)
+  monthly_interest = (interest_rate * 0.01) / 12
+  monthly_payments =
+    (get_monthly_payments(loan_amount, monthly_interest, loan_duration))
+  total_to_pay = (loan_duration * monthly_payments)
+  total_interest = total_to_pay - loan_amount
+
+  return monthly_interest, monthly_payments, total_to_pay, total_interest
+end
+
+def amortization(loan_amount, loan_duration, monthly_interest, monthly_payments)
+  table = { balance: [], interest: [], principal: [], ending_bal: [] }
   month = 0
-  int = (loan_amt * mthly_int)
+  interest = (loan_amount * monthly_interest)
 
-  loan_dur.times do
-    table[:balance][month] = loan_amt
-    table[:int][month] = int
-    table[:principal][month] = (mthly_pymnts - int)
-    table[:ending_bal][month] = (loan_amt - (mthly_pymnts - int))
+  loan_duration.times do
+    table[:balance][month] = loan_amount
+    table[:interest][month] = interest
+    table[:principal][month] = (monthly_payments - interest)
+    table[:ending_bal][month] = (loan_amount - (monthly_payments - interest))
 
-    int = table[:ending_bal][month] * mthly_int
-    loan_amt = table[:ending_bal][month]
+    interest = table[:ending_bal][month] * monthly_interest
+    loan_amount = table[:ending_bal][month]
 
     month += 1
   end
   table
 end
 
-def print_header(alignment)
+def print_header(alignment) # Prints amortization header at alignment offsets
   header = ["Beginning Balance", "Interest", "Principal", "Ending Balance"]
   string_header = " " * 60
   counter = 0
@@ -72,7 +99,7 @@ def print_header(alignment)
   puts("-" * string_header.length)
 end
 
-def print_amortization(table, alignment)
+def print_amortization(table, alignment) # Prints table at alignment offsets
   month = 0
 
   table[:balance].length.times do
@@ -83,7 +110,7 @@ def print_amortization(table, alignment)
     table.each { |entry| row.push(entry[1][month]) }
 
     row.each do |entry|
-      string_row.insert(alignment.fetch(counter), entry.round(2).to_f.to_s)
+      string_row.insert(alignment.fetch(counter), form_num(entry))
       counter += 1
     end
 
@@ -95,29 +122,28 @@ end
 
 puts "Welcome to the mortgage calculator!"
 
-loan_amt, loan_dur, int_rate = get_amt_dur_rate
+loan_amount, loan_duration, interest_rate = get_amount_duration_rate
 
 loop do # Main loop
-  mthly_int, mthly_pymnts, ttl_to_pay, ttl_int = calc(loan_amt,
-                                                      loan_dur,
-                                                      int_rate)
+  monthly_interest, monthly_payments, total_to_pay, total_interest =
+    calc(loan_amount, loan_duration, interest_rate)
 
   puts %{
 
-    Loan amount   > $#{loan_amt}
-    Interest Rate > #{(int_rate).round(2).to_f}%
-    Loan Duration > #{loan_dur} months
+    Loan amount   > $#{loan_amount}
+    Interest Rate > #{form_num(interest_rate)}%
+    Loan Duration > #{loan_duration} months
 
-    You will make #{loan_dur} payments of > $#{mthly_pymnts.round(2).to_f}
+    You will make #{loan_duration} payments of > $#{form_num(monthly_payments)}
 
-    All together you will pay > $#{ttl_to_pay.round(2).to_f}
+    All together you will pay > $#{form_num(total_to_pay)}
 
-    Your total interest payed will be > $#{ttl_int.round(2).to_f}
+    Your total interest payed will be > $#{form_num(total_interest)}
 
     Options:
       1) Change Loan amount
       2) Change loan duration
-      3) Change interest rate
+      3) Change interesterest rate
       4) Restart the calculator
       5) Calculate amortization table
       6) Exit the Calculator
@@ -128,16 +154,19 @@ loop do # Main loop
 
   case option_select
   when "1"
-    loan_amt = get_loan_amt
+    loan_amount = get_loan_amount
   when "2"
-    loan_dur = get_loan_dur
+    loan_duration = get_loan_duration
   when "3"
-    int_rate = get_int_rate
+    interest_rate = get_interest_rate
   when "4"
-    loan_amt, loan_dur, int_rate = get_amt_dur_rate
-  when "5"
+    loan_amount, loan_duration, interest_rate = get_amount_duration_rate
+  when "5" 
     alignment = [0, 20, 40, 60]
-    table = amortization(loan_amt, loan_dur, mthly_int, mthly_pymnts)
+    table = amortization(loan_amount,
+                         loan_duration,
+                         monthly_interest,
+                         monthly_payments)
 
     print_header(alignment)
 
