@@ -1,106 +1,153 @@
-# Get three pieces of information
-#  loan amount
-#  APR
-#  loan duration
-#
-# Calculate monthly interest rate
-# Calculate loan duration in months
-# Calculate monthly payment
-
-# m = p * (j / (1 - (1 + j)**(-n)))
-# m = monthly payment
-# p = loan amount
-# j = monthly interest rate
-# n = loan duration in months
-
-require "pry"
 require "bigdecimal"
 
-def get_monthly_payments(loan_amt, monthly_int, loan_dur)
-  monthly_payment = loan_amt * (monthly_int / (1 - (1 + monthly_int)**(-loan_dur)))
+def get_mthly_pymnts(loan_amt, mthly_int, loan_dur)
+  loan_amt * (mthly_int / (1 - (1 + mthly_int)**(-loan_dur)))
 end
 
-def get_loan_amount
+def get_loan_amt
   puts "Please enter the loan amount in dollars"
-  amount = gets.chomp.to_i
+  gets.chomp.to_i
 end
 
-def get_loan_duration
+def get_loan_dur
   puts "Please enter the loan duration in months"
-  duration = gets.chomp.to_i
+  gets.chomp.to_i
 end
 
-def get_monthly_interest(loan_duration)
-  puts "Next please enter the Annual Percentage Rate. Example: 10.3 for 10.3%"
-  interest = BigDecimal(gets.chomp) * 0.01
-  monthly_interest = interest / 12
+def get_int_rate
+  puts "Please enter the Annual Percentage Rate. Example: 10.3 for 10.3%"
+  BigDecimal(gets.chomp)
+end
+
+def get_amt_dur_rate
+  loan = get_loan_amt
+  dur = get_loan_dur
+  rate = get_int_rate
+
+  return loan, dur, rate
+end
+
+def calc(loan_amt, loan_dur, int_rate)
+  mthly_int = (int_rate * 0.01) / 12
+  mthly_pymnts = (get_mthly_pymnts(loan_amt, mthly_int, loan_dur))
+  ttl_to_pay = (loan_dur * mthly_pymnts)
+  ttl_int = ttl_to_pay - loan_amt
+
+  return mthly_int, mthly_pymnts, ttl_to_pay, ttl_int
+end
+
+def amortization(loan_amt, loan_dur, mthly_int, mthly_pymnts)
+  table = { balance: [], int: [], principal: [], ending_bal: [] }
+  month = 0
+  int = (loan_amt * mthly_int)
+
+  loan_dur.times do
+    table[:balance][month] = loan_amt
+    table[:int][month] = int
+    table[:principal][month] = (mthly_pymnts - int)
+    table[:ending_bal][month] = (loan_amt - (mthly_pymnts - int))
+
+    int = table[:ending_bal][month] * mthly_int
+    loan_amt = table[:ending_bal][month]
+
+    month += 1
+  end
+  table
+end
+
+def print_header(alignment)
+  header = ["Beginning Balance", "Interest", "Principal", "Ending Balance"]
+  string_header = " " * 60
+  counter = 0
+
+  header.each do |entry|
+    string_header.insert(alignment.fetch(counter), entry)
+    counter += 1
+  end
+
+  string_header.rstrip!
+
+  puts string_header
+
+  puts("-" * string_header.length)
+end
+
+def print_amortization(table, alignment)
+  month = 0
+
+  table[:balance].length.times do
+    counter = 0
+    row = []
+    string_row = " " * 60
+
+    table.each { |entry| row.push(entry[1][month]) }
+
+    row.each do |entry|
+      string_row.insert(alignment.fetch(counter), entry.round(2).to_f.to_s)
+      counter += 1
+    end
+
+    month += 1
+
+    puts string_row.rstrip
+  end
 end
 
 puts "Welcome to the mortgage calculator!"
 
-loan_amount = get_loan_amount
-loan_duration = get_loan_duration
-monthly_interest = get_monthly_interest(loan_duration)
-monthly_payments = (get_monthly_payments(loan_amount, monthly_interest, loan_duration)).round(3)
-total_to_pay = (loan_duration * monthly_payments).round(3)
-total_interest = total_to_pay - loan_amount
+loan_amt, loan_dur, int_rate = get_amt_dur_rate
 
-puts "You will need to make #{loan_duration} payments."
-puts "Each payment will be $#{monthly_payments.round(2).to_f}"
-puts "Your total interest will be $#{total_interest.round(2).to_f}"
+loop do # Main loop
+  mthly_int, mthly_pymnts, ttl_to_pay, ttl_int = calc(loan_amt,
+                                                      loan_dur,
+                                                      int_rate)
 
+  puts %{
 
+    Loan amount   > $#{loan_amt}
+    Interest Rate > #{(int_rate).round(2).to_f}%
+    Loan Duration > #{loan_dur} months
 
+    You will make #{loan_dur} payments of > $#{mthly_pymnts.round(2).to_f}
 
+    All together you will pay > $#{ttl_to_pay.round(2).to_f}
 
+    Your total interest payed will be > $#{ttl_int.round(2).to_f}
 
-# START
-#  
-# PRINT Welcome and what information will be needed by the calculator
-# 
-# GET loan_amount (In dollars)
-#   Check format
-# GET annual_percentage_rate (formatted as xx.xx%)
-#   Check format
-# GET loan_duration (In months or years)
-#   Check format
-# 
-# SET loan_duration_months =
-#   IF months
-#     loan_duration
-#   IF years
-#     loan_duration * 12
-# 
-# SET monthly_interest_rate = annual_percentage_rate / loan_duration
-# 
-# SET monthly_payment = loan_amount * (monthly_interest_rate / (1 - (1 + monthly_interest_rate)**(-loan_duration_months)))
-# 
-# PRINT monthly_payments 
-# PRINT total payments
-# PRINT total amount to be paid
-# 
-# PRINT would you like to change 1) loan amount 2) APR 3) loan_duration 4) Exit Calc
-# GET change
-# 
-# IF change = 1
-#  PRINT What is the new loan amount?
-#   GET loan_amount
-#   recalculate
-# 
-# IF change = 2
-#   PRINT What is the new APR?
-#   GET annual_percentage_rate
-#   recalculate
-# 
-# IF change = 3
-#   PRINT What is the duration of the loan? 
-#   GET duration in months or years
-#   recalculate
-# 
-# IF change = 4
-#   PRINT Thanks for using the calculator
-#   END
-# 
-# IF ELSE
-#   PRINT Please choose 1, 2, 3 or 4
-#   loop
+    Options:
+      1) Change Loan amount
+      2) Change loan duration
+      3) Change interest rate
+      4) Restart the calculator
+      5) Calculate amortization table
+      6) Exit the Calculator
+
+    }
+
+  option_select = gets.chomp
+
+  case option_select
+  when "1"
+    loan_amt = get_loan_amt
+  when "2"
+    loan_dur = get_loan_dur
+  when "3"
+    int_rate = get_int_rate
+  when "4"
+    loan_amt, loan_dur, int_rate = get_amt_dur_rate
+  when "5"
+    alignment = [0, 20, 40, 60]
+    table = amortization(loan_amt, loan_dur, mthly_int, mthly_pymnts)
+
+    print_header(alignment)
+
+    print_amortization(table, alignment)
+
+    puts
+    puts "Press enter to continue"
+    gets
+  when "6"
+    puts "Thanks for using the calculator!"
+    break
+  end
+end
