@@ -1,23 +1,27 @@
 require "bigdecimal"
 
+# Calculates monthly payments with interest included
 def get_monthly_payments(loan_amount, monthly_interest, loan_duration)
   loan_amount *
     (monthly_interest / (1 - (1 + monthly_interest)**(-loan_duration)))
 end
 
-def form_num(num) # Converts floats to two decimal place strings
+# Converts floats to two decimal place strings
+def form_num(num)
   format('%.2f', num)
 end
 
 def float?(num)
-  /\d/.match?(num) && /^-?\d*\.?\d*$/.match?(num) # checks for float nums
+  /\d/.match?(num) && /^-?\d*\.?\d*$/.match?(num)
 end
 
+# 
 def integer?(num)
-  /^\d+$/.match?(num.to_s) # checks for integers
+  /^\d+$/.match?(num)
 end
 
-def valid_num?(num) # Uses two methods to check if num is a valid input
+# Uses integer? and float? methods to check if num is a valid input
+def valid_num?(num)
   integer?(num) || float?(num)
 end
 
@@ -53,6 +57,7 @@ def get_amount_duration_rate
   return loan, duration, rate
 end
 
+# Calculates all the basic information about loan payments
 def calc(loan_amount, loan_duration, interest_rate)
   monthly_interest = (interest_rate * 0.01) / 12
   monthly_payments =
@@ -63,6 +68,8 @@ def calc(loan_amount, loan_duration, interest_rate)
   return monthly_interest, monthly_payments, total_to_pay, total_interest
 end
 
+# Builds the amortization table. Keys are columns headers and the arrays are
+# the filled columns. Index [0] from each key in the table is the first row.
 def amortization(loan_amount, loan_duration, monthly_interest, monthly_payments)
   table = { balance: [], interest: [], principal: [], ending_bal: [] }
   month = 0
@@ -82,13 +89,14 @@ def amortization(loan_amount, loan_duration, monthly_interest, monthly_payments)
   table
 end
 
-def print_header(alignment) # Prints amortization header at alignment offsets
+# Prints amortization header at alignment offsets
+def print_header(alignment)
   header = ["Beginning Balance", "Interest", "Principal", "Ending Balance"]
   string_header = " " * 60
   counter = 0
 
-  header.each do |entry|
-    string_header.insert(alignment.fetch(counter), entry)
+  header.each do |element|
+    string_header.insert(alignment.fetch(counter), element)
     counter += 1
   end
 
@@ -99,7 +107,8 @@ def print_header(alignment) # Prints amortization header at alignment offsets
   puts("-" * string_header.length)
 end
 
-def print_amortization(table, alignment) # Prints table at alignment offsets
+# Prints table at alignment offsets
+def print_amortization(table, alignment)
   month = 0
 
   table[:balance].length.times do
@@ -161,7 +170,7 @@ loop do # Main loop
     interest_rate = get_interest_rate
   when "4"
     loan_amount, loan_duration, interest_rate = get_amount_duration_rate
-  when "5" 
+  when "5"
     alignment = [0, 20, 40, 60]
     table = amortization(loan_amount,
                          loan_duration,
