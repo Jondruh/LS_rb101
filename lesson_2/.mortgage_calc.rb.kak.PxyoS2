@@ -1,0 +1,147 @@
+# Get three pieces of information
+#  loan amount
+#  APR
+#  loan duration
+#
+# Calculate monthly interest rate
+# Calculate loan duration in months
+# Calculate monthly payment
+
+# m = p * (j / (1 - (1 + j)**(-n)))
+# m = monthly payment
+# p = loan amount
+# j = monthly interest rate
+# n = loan duration in months
+
+require "pry"
+require "bigdecimal"
+
+def get_monthly_payments(loan_amt, monthly_int, loan_dur)
+  monthly_payment = loan_amt * (monthly_int / (1 - (1 + monthly_int)**(-loan_dur)))
+end
+
+def get_loan_amount
+  puts "Please enter the loan amount in dollars"
+  amount = gets.chomp.to_i
+end
+
+def get_loan_duration
+  puts "Please enter the loan duration in months"
+  duration = gets.chomp.to_i
+end
+
+def get_interest_rate
+  puts "Please enter the Annual Percentage Rate. Example: 10.3 for 10.3%"
+  interest = BigDecimal(gets.chomp)
+end
+
+def get_amount_duration_rate
+  loan = get_loan_amount
+  duration = get_loan_duration
+  rate = get_interest_rate
+  return loan, duration, rate
+end
+
+def calculate(loan_amount, loan_duration, interest_rate)
+  monthly_interest = (interest_rate * 0.01) / 12  
+  monthly_payments = (get_monthly_payments(loan_amount, monthly_interest, loan_duration)).round(3)
+  total_to_pay = (loan_duration * monthly_payments)
+  total_interest = total_to_pay - loan_amount
+  return monthly_interest, monthly_payments, total_to_pay, total_interest
+end
+
+def amortization(loan_amount, loan_duration, monthly_interest, monthly_payments)
+    table = {balance: [], interest: [], principal: [], ending_bal: []}
+    month = 0
+    current_balance = loan_amount
+    payment = monthly_payments.round
+    interest = (current_balance * monthly_interest)
+
+    loan_duration.times do
+        table[:balance].push(current_balance)
+        table[:interest].push(interest.round(2).to_f)
+        table[:principal].push((monthly_payments - interest).round(2).to_f)
+        table[:ending_bal].push((current_balance - (monthly_payments - interest)).round(2).to_f)
+        interest = (table[:ending_bal][month] * monthly_interest)
+        current_balance = table[:ending_bal][month]
+        month += 1
+    end
+    return table
+end
+
+def print_amortization(table) 
+    header = ["Beginning Balance", "Interest", "Principal", "Ending Balance"]
+    string_header = header.join(" " * 10)
+    puts string_header
+    puts("-" * string_header.length)
+    table[:balance].length.times {
+      row = []
+      table.each { |entry| row.push(entry[1][month]) }
+      month += 1
+      string_row = (" " * (string_header.length - 12))
+      offsets = []
+      offsets.push(string_header =~ /B/)
+      offsets.push(string_header =~ /I/)
+      offsets.push(string_header =~ /P/)
+      offsets.push(string_header =~ /E/)
+      
+      row.each { |entry|
+        string_row.insert(offsets.shift, entry.to_s)
+      }
+      puts string_row
+    }
+end
+
+puts "Welcome to the mortgage calculator!"
+
+loan_amount, loan_duration, interest_rate = get_amount_duration_rate
+
+loop do  #Main loop
+
+  monthly_interest, monthly_payments, total_to_pay, total_interest = calculate(loan_amount, loan_duration, interest_rate)
+
+  puts %{
+
+    Loan amount   > $#{loan_amount}
+    Interest Rate > #{(interest_rate).round(2).to_f}%
+    Loan Duration > #{loan_duration} months
+
+    You will need to make #{loan_duration} payments of > $#{monthly_payments.round(2).to_f}
+  
+    All together you will pay > $#{total_to_pay.round(2).to_f}
+
+    Your total interest payed will be > $#{total_interest.round(2).to_f}
+
+    Options:
+      1) Change Loan amount
+      2) Change loan duration
+      3) Change interest rate
+      4) Restart the calculator
+      5) Calculate amortization table
+      6) Exit the Calculator
+
+    }
+  
+  option_select = gets.chomp
+  
+  case option_select
+  when "1"
+    loan_amount = get_loan_amount
+  when "2"
+    loan_duration = get_loan_duration
+  when "3"
+    interest_rate = get_interest_rate
+  when "4"
+    loan_amount, loan_duration, interest_rate = get_amount_duration_rate
+  when "5"
+    table = amortization(loan_amount, loan_duration, monthly_interest, monthly_payments)
+    print_amortization(table)
+    puts "Press enter to continue"
+    gets
+  when "6"
+    puts "Thanks for using the calculator!"
+    break
+  end
+
+end
+

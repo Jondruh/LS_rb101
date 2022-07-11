@@ -10,7 +10,7 @@ def prompt(message)
 end
 
 def valid_number?(num)
-  num.match?(/^\d+$/) # returns false if anything but digits
+  /^\d+$/.match?(num) # returns false if anything but digits
 end
 
 def number?(num)
