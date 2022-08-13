@@ -1,6 +1,6 @@
 require "pry"
 
-WINNING_POSITIONS = [[1, 4, 8],
+WINNING_POSITIONS = [[1, 4, 7],
                      [2, 5, 8],
                      [3, 6, 9],
                      [1, 2, 3],
@@ -10,28 +10,20 @@ WINNING_POSITIONS = [[1, 4, 8],
                      [3, 5, 7]
 ]
 
-X_POSITIONS = []
 
-O_POSITIONS = []
-
-BOARD_POSITIONS = [[1, 2, 3], 
-                   [4, 5, 6], 
-                   [7, 8, 9] 
-]
-
-def draw_board(player_positions)
+def draw_board(positions)
   puts 
-  player_positions.each_with_index do |row, index|
+  positions[:board_positions].each_with_index do |row, index|
     puts "#{row[0]} | #{row[1]} | #{row[2]}".center(30)
     puts "---+---+---".center(30) if index < 2
   end
   puts
 end
 
-def move_locator(player_move)
+def move_locator(player_move, positions)
   row = nil 
   position = nil
-  BOARD_POSITIONS.each_with_index do |board_row, r_index|
+  positions[:board_positions].each_with_index do |board_row, r_index|
     board_row.each_with_index do |tile, t_index|
       if tile == player_move
         row = r_index
@@ -42,27 +34,27 @@ def move_locator(player_move)
   return row, position
 end
 
-def board_update(player, move)
-  row, position = move_locator(move)
+def board_update(player, move, positions)
+  row, position = move_locator(move, positions)
   case player
   when "X"
-    X_POSITIONS << BOARD_POSITIONS[row][position]
+    positions[:x_positions] << positions[:board_positions][row][position]
   when "O"
-    O_POSITIONS << BOARD_POSITIONS[row][position]
+    positions[:o_positions] << positions[:board_positions][row][position]
   end
   
-  BOARD_POSITIONS[row][position] = player
+  positions[:board_positions][row][position] = player
 end
 
-def win_check
+def win_check(positions)
   winner = nil
 
-  if X_POSITIONS.size > 2 || O_POSITIONS.size > 2
+  if positions[:x_positions].size > 2 || positions[:o_positions].size > 2
     WINNING_POSITIONS.each do |position|
-      if position.all? { |ele| X_POSITIONS.include?(ele) }
+      if position.all? { |ele| positions[:x_positions].include?(ele) }
         winner = "X"
       end
-      if position.all? { |ele| O_POSITIONS.include?(ele) }
+      if position.all? { |ele| positions[:o_positions].include?(ele) }
         winner = "O"
       end
     end
@@ -70,13 +62,14 @@ def win_check
   winner
 end
 
-def computer_move
-  valid_move_list.sample
+def computer_move(positions)
+  valid_moves = valid_move_list(positions)
+  valid_moves.sample
 end
 
-def valid_move_list
+def valid_move_list(positions)
   valid_positions = []
-  BOARD_POSITIONS.each do |array|
+  positions[:board_positions].each do |array|
     array.each do |position|
       valid_positions << position if position.class == Integer 
     end
@@ -85,7 +78,18 @@ def valid_move_list
 end
 
 # Setup
-draw_board(BOARD_POSITIONS)
+positions = { 
+            x_positions: [],
+            o_positions: [],
+            board_positions: [[1, 2, 3],
+                              [4, 5, 6],
+                              [7, 8, 9]
+                              ]
+}
+
+          
+
+draw_board(positions)
 
 # Main Loop
 loop do
@@ -94,17 +98,17 @@ loop do
   puts "You are player \"X\", please select one of the numbered tiles to play on"
   
   player_input = gets.chomp.to_i
-  board_update("X", player_input)
-  draw_board(BOARD_POSITIONS)
-  if win_check
-    puts "THE WINNER IS #{win_check}!!!!"
+  board_update("X", player_input, positions)
+  draw_board(positions)
+  if win_check(positions)
+    puts "THE WINNER IS #{win_check(positions)}!!!!"
     break
   end
 
-  board_update("O", computer_move)
-  draw_board(BOARD_POSITIONS)
-  if win_check
-    puts "THE WINNER IS #{win_check}!!!!"
+  board_update("O", computer_move(positions), positions)
+  draw_board(positions)
+  if win_check(positions)
+    puts "THE WINNER IS #{win_check(positions)}!!!!"
     break
   end
 end
