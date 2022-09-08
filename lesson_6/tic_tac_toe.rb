@@ -1,6 +1,4 @@
-# TODO
-#   -larger board?
-
+require "pry"
 WINNING_POSITIONS = [[1, 4, 7],
                      [2, 5, 8],
                      [3, 6, 9],
@@ -189,6 +187,10 @@ def first_to_five?(score)
   true if score.key(5)
 end
 
+def alternate_player(whos_turn)
+  whos_turn == "X" ? whos_turn = "O" : whos_turn = "X"
+end  
+
 loop do # Main Loop
   # Setup
   score = { player: 0, computer: 0 }
@@ -213,6 +215,7 @@ loop do # Main Loop
   end
 
   loop do # The loop for a single game of tic tac toe
+    # Sets and resets the board state for a fresh game
     turn = "X"
     positions = {
       x_positions: [],
@@ -224,16 +227,12 @@ loop do # Main Loop
       ]
     }
 
-    loop do
+    loop do # One turn loop
       print_score(score)
       draw_board(positions)
 
       move = get_move(players, positions, turn)
-
       board_update(turn, move, positions)
-      print_score(score)
-      draw_board(positions)
-      turn = "O"
 
       if win_check(positions)
         update_score(win_check(positions), players, score)
@@ -246,33 +245,14 @@ loop do # Main Loop
       end
 
       if tie?(positions)
-        puts "It's a tie!"
-        ready_prompt
-        break
-      end
-
-      move = get_move(players, positions, turn)
-
-      board_update(turn, move, positions)
-      print_score(score)
-      draw_board(positions)
-      turn = "X"
-
-      if win_check(positions)
-        update_score(win_check(positions), players, score)
         print_score(score)
         draw_board(positions)
-        puts "The winner is #{win_check(positions)}!"
-        break if score.key(5)
-        ready_prompt
-        break
-      end
-
-      if tie?(positions)
         puts "It's a tie!"
         ready_prompt
         break
       end
+      
+      turn = alternate_player(turn)
     end
 
     if score.key(5) == :player # if statement checks to see if either player has 5 points
