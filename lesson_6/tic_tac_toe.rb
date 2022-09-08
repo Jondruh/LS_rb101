@@ -1,4 +1,5 @@
-require 'pry'
+# TODO
+#   -larger board?
 
 WINNING_POSITIONS = [[1, 4, 7],
                      [2, 5, 8],
@@ -11,17 +12,25 @@ WINNING_POSITIONS = [[1, 4, 7],
 
 # Takes inputs of player positions and draws the board.
 def draw_board(positions)
-  puts
   positions[:board_positions].each_with_index do |row, index|
-    puts "#{row[0]} | #{row[1]} | #{row[2]}".center(30)
-    puts "---+---+---".center(30) if index < 2
+    puts "           |       |       "
+    puts "  #{row[0]}   |   #{row[1]}   |   #{row[2]}".center(30)
+    puts "           |       |       "
+    puts "-------+-------+-------".center(32) if index < 2
   end
+  puts
+end
+
+def print_score(score)
+  system "clear"
+  puts "The score is: player: #{score[:player]} computer: #{score[:computer]}"
+  puts "First player to 5 points wins!"
   puts
 end
 
 # Takes the number that a player selects and returns two numbers back,
 # the row (0, 1, 2) and the position (0, 1, 2)
-def move_locator(player_move, positions) 
+def move_locator(player_move, positions)
   row = nil
   position = nil
   positions[:board_positions].each_with_index do |board_row, r_index|
@@ -65,7 +74,7 @@ def win_check(positions)
   winner
 end
 
-# Takes the player, and a positions hash, returns a modified new array
+# Takes the player, and a positions hash, returns a new array
 # of WINNING_POSITIONS which are still possible for the given player.
 def possible_wins(player, positions)
   case player
@@ -80,8 +89,9 @@ def possible_wins(player, positions)
   end
 end
 
-# Takes the array that possible_wins returns and returns a new array that
-# subtracts the positions that are already held from each sub-array.
+# Takes an array of WINNING_POSITIONS that are still available for the
+# given player (This array produced by #possible_wins). Returns a new
+# array with any of the held positions subtracted from the input array.
 def paths_to_win(player, positions)
   case player
   when "O"
@@ -98,24 +108,24 @@ def paths_to_win(player, positions)
 end
 
 # Chooses computer move based on how large each sub-array is after being
-# passed through paths_to_win. Computer will choose to win, to block a win,
+# passed through #paths_to_win. Computer will choose to win, to block a win,
 # to play on it's shortest win-path that isn't a win, and to play in any
 # open position - in that order.
-def computer_move(positions)
-  o_win_paths = paths_to_win("O", positions)
-  x_win_paths = paths_to_win("X", positions)
+def computer_move(positions, players)
+  opponent_win_paths = paths_to_win(players[:player], positions)
+  comp_win_paths = paths_to_win(players[:computer], positions)
 
-  if o_win_paths.map(&:length).any? { |length| length == 1 }
-    o_win_paths.min { |a, b| a.size <=> b.size }.sample
+  if comp_win_paths.map(&:length).any? { |length| length == 1 }
+    comp_win_paths.min { |a, b| a.size <=> b.size }.sample
 
-  elsif x_win_paths.map(&:length).any? { |length| length == 1 }
-    x_win_paths.min { |a, b| a.size <=> b.size }.sample
+  elsif opponent_win_paths.map(&:length).any? { |length| length == 1 }
+    opponent_win_paths.min { |a, b| a.size <=> b.size }.sample
 
-  elsif o_win_paths.length == 0
+  elsif comp_win_paths.length == 0
     valid_move_list(positions).sample
 
   else
-    o_win_paths.min { |a, b| a.size <=> b.size }.sample
+    comp_win_paths.min { |a, b| a.size <=> b.size }.sample
   end
 end
 
@@ -142,53 +152,139 @@ def tie?(positions)
   end
 end
 
-# Setup
-positions = {
-  x_positions: [],
-  o_positions: [],
-  board_positions: [
-    [1, 2, 3],
-    [4, 5, 6],
-    [7, 8, 9]
-  ]
-}
+def update_score(winner, players, score)
+  score[players.key(winner)] += 1
+end
 
-player_input = nil
+# Sets player and computer to either X or O. Pass the player's token in
+# and the method will set the computers token to the other option.
+def set_player(player_tracker, x_or_o)
+  player_tracker[:player] = x_or_o
+  if x_or_o == "X"
+    player_tracker[:computer] = "O"
+  elsif x_or_o == "O"
+    player_tracker[:computer] = "X"
+  end
+end
 
-draw_board(positions)
+def get_move(players, positions, turn)
+  if players[:player] == turn
+    puts "You are playing as #{turn}, select one of the numbered tiles to play."
+    loop do # input validation loop
+      player_input = gets.chomp.to_i
+      return player_input if valid_input?(player_input, positions)
+      puts "Please select a number from the open board positions."
+    end
+  elsif players[:computer] == turn
+    computer_move(positions, players)
+  end
+end
 
-# Main Loop
-loop do
-  puts
-  puts "You are player \"X\", select one of the numbered tiles to play on"
+def ready_prompt
+  puts "Ready for the next round?"
+  gets
+end
 
-  loop do # input validation loop
-    player_input = gets.chomp.to_i
-    break if valid_input?(player_input, positions)
-    puts "Please select a number from the open board positions"
+def first_to_five?(score)
+  true if score.key(5)
+end
+
+loop do # Main Loop
+  # Setup
+  score = { player: 0, computer: 0 }
+  players = { player: "", computer: "" }
+
+  loop do # Setting who plays as X and O
+    system("clear")
+    puts "Welcome to tic tac toe. X goes first."
+    puts "Would you like to play as X or O? (press 'x' or 'o' to choose)"
+    puts "Or let the computer decide? (press 'c')"
+
+    answer = gets.chomp.upcase
+    if answer == "C"
+      set_player(players, ["X", "O"].sample)
+      break
+    elsif answer == "X" || answer == "O"
+      set_player(players, answer)
+      break
+    end
+
+    puts "Please enter 'x', 'o', or 'c'."
   end
 
-  board_update("X", player_input, positions)
-  draw_board(positions)
-  if win_check(positions)
-    puts "THE WINNER IS #{win_check(positions)}!!!!"
-    break
+  loop do # The loop for a single game of tic tac toe
+    turn = "X"
+    positions = {
+      x_positions: [],
+      o_positions: [],
+      board_positions: [
+        [1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9]
+      ]
+    }
+
+    loop do
+      print_score(score)
+      draw_board(positions)
+
+      move = get_move(players, positions, turn)
+
+      board_update(turn, move, positions)
+      print_score(score)
+      draw_board(positions)
+      turn = "O"
+
+      if win_check(positions)
+        update_score(win_check(positions), players, score)
+        print_score(score)
+        draw_board(positions)
+        puts "The winner is #{win_check(positions)}!"
+        break if score.key(5)
+        ready_prompt
+        break
+      end
+
+      if tie?(positions)
+        puts "It's a tie!"
+        ready_prompt
+        break
+      end
+
+      move = get_move(players, positions, turn)
+
+      board_update(turn, move, positions)
+      print_score(score)
+      draw_board(positions)
+      turn = "X"
+
+      if win_check(positions)
+        update_score(win_check(positions), players, score)
+        print_score(score)
+        draw_board(positions)
+        puts "The winner is #{win_check(positions)}!"
+        break if score.key(5)
+        ready_prompt
+        break
+      end
+
+      if tie?(positions)
+        puts "It's a tie!"
+        ready_prompt
+        break
+      end
+    end
+
+    if score.key(5) == :player # if statement checks to see if either player has 5 points
+      puts "You Won!"
+      break
+    elsif score.key(5) == :computer
+      puts "You Lost!"
+      break
+    end
   end
 
-  if tie?(positions)
-    puts "IT'S A TIE!"
-    break
-  end
-
-  board_update("O", computer_move(positions), positions)
-  draw_board(positions)
-  if win_check(positions)
-    puts "THE WINNER IS #{win_check(positions)}!!!!"
-    break
-  end
-
-  if tie?(positions)
-    puts "IT'S A TIE!"
-    break
-  end
+  puts "Would you like to play again? (y or n)"
+  answer = gets.chomp.downcase
+  break if answer.start_with?("n")
 end
