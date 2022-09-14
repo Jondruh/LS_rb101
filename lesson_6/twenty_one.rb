@@ -1,5 +1,3 @@
-require "pry"
-
 def build_deck
   deck = []
   suits = ["d", "h", "c", "s"]
@@ -26,17 +24,32 @@ def format_hand(hand, hide = 0)
   end
 end
 
-def winner(players)
-  if players[:player][:bust]
-    winner = "Dealer"
-  elsif players[:dealer][:bust]
-    winner = "Player" 
-  elsif players[:player][:score] > players[:dealer][:score]
-    winner = "Player"
-  elsif players[:dealer][:score] > players[:player][:score]
-    winner = "Dealer"
+def winner(player, dealer)
+  if player[:bust]
+    :dealer_by_bust 
+  elsif dealer[:bust]
+    :player_by_bust
+  elsif player[:score] > dealer[:score]
+    :player
+  elsif dealer[:score] > player[:score]
+    :dealer
   else
-    winner = "Tie"
+    :tie
+  end
+end
+
+def display_winner(winner)
+  case winner
+  when :dealer
+    puts "The Dealer won!"
+  when :dealer_by_bust
+    puts "You went bust, the Dealer won!"
+  when :player
+    puts "You won!"
+  when :player_by_bust
+    puts "The dealer went bust, you won!"
+  when :tie
+    puts "It's a tie!"
   end
 end
 
@@ -70,70 +83,75 @@ def set_bust(player)
   player[:bust] = true if player[:score] > 21
 end
 
-def set_score(players_hash)
-  players_hash.each do |player, player_stats|
-    player_stats[:score] = evaluate_hand(hand_to_value(player_stats[:hand]))
-  end
+def set_score(player)
+  player[:score] = evaluate_hand(hand_to_value(player[:hand]))
 end
 
-# Setup
-players = {dealer: {bust: false, score: nil, hand: []},
-          player: {bust: false, score: nil, hand: []}}
-        
+def stop_playing?
+  puts "Would you like to play again? (y/n)"
+  answer = gets.chomp.downcase
 
-deck = build_deck
-active_player = players[:player]
+  true if answer == "y"
+end
 
-deal(deck, players[:player][:hand], 2)
-deal(deck, players[:dealer][:hand], 2)
-
-set_score(players)
-
-# Game loop
 loop do
+  # Setup
+  player = {bust: false, score: nil, hand: []}
+  dealer = {bust: false, score: nil, hand: []}
+          
+
+  deck = build_deck
+  active_player = player
+
+  deal(deck, player[:hand], 2)
+  deal(deck, dealer[:hand], 2)
+
+  set_score(player)
+  set_score(dealer)
+
+  # Game loop
+  loop do
+    system("clear")
+
+    if active_player == player
+
+      puts "The dealers hand is: " + format_hand(dealer[:hand], 1) + " and a second hidden card"
+      puts "Your hand is: " + format_hand(player[:hand])
+      puts "Your hand is worth: #{player[:score]} points."
+
+      choice = nil
+      loop do
+        puts "Would you like to hit or stay? ('h' or 's')"
+        choice = gets.chomp.downcase
+        break if choice == "h" || choice == "s"
+        puts "Please enter 'h' or 's'"
+      end
+
+    elsif active_player == dealer
+      if dealer[:score] > 16
+        choice = "s"
+      else
+        choice = "h"
+      end
+    end
+
+    if choice == "h"
+      deal(deck, active_player[:hand])
+      set_score(active_player)
+      break if set_bust(active_player)
+    elsif choice == "s" && active_player == dealer
+      break
+    else
+      active_player = dealer
+    end
+  end
+
+  # Display Results and play again
   system("clear")
 
-  if active_player == players[:player]
+  puts "Your hand: " + format_hand(player[:hand]) + ". Worth: #{player[:score]}"
+  puts "Dealer's hand: " + format_hand(dealer[:hand]) + ". Worth: #{dealer[:score]}"
+  display_winner(winner(player, dealer))
 
-    puts "The dealers hand is: " + format_hand(players[:dealer][:hand], 1) + " and a second hidden card"
-    puts "Your hand is: " + format_hand(players[:player][:hand])
-    puts "Your hand is worth: #{players[:player][:score]} points."
-
-    choice = nil
-    loop do
-      puts "Would you like to hit or stay? ('h' or 's')"
-      choice = gets.chomp.downcase
-      break if choice == "h" || choice == "s"
-      puts "Please enter 'h' or 's'"
-    end
-
-  elsif active_player == players[:dealer]
-    if players[:dealer][:score] > 16
-      choice = "s"
-    else
-      choice = "h"
-    end
-  end
-
-  if choice == "h"
-    deal(deck, active_player[:hand])
-    set_score(players)
-    break if set_bust(active_player)
-  elsif choice == "s" && active_player == players[:dealer]
-    break
-  else
-    active_player = players[:dealer]
-  end
+  break if stop_playing?
 end
-
-# Display Results and play again
-system("clear")
-if players[:player][:bust]
-  puts "You went bust!"
-elsif
-  players[:dealer][:bust]
-  puts "The dealer went bust!"
-end
-puts "Your hand: " + format_hand(players[:player][:hand]) + " worth: #{players[:player][:score]}"
-puts "Dealer's hand: " + format_hand(players[:dealer][:hand]) + " worth: #{players[:dealer][:score]}"
-puts "The winner is: #{winner(players)}"
