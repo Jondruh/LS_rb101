@@ -1,75 +1,3 @@
-# PROCESS
-#   Game similar to blackjack
-#   Rules
-#     - standard 52 card deck
-#     - goal is to get as close to 21 as possible without going over
-#     - if you go over it's a "bust" - you lose.
-#     - there are two players, the dealer and the "player"
-#       - each are dealt 2 card initially
-#       - the player can see both of their cards but only 1 of the dealers
-#     - On the player's turn they can hit or stay. Hitting means drawing a card.
-#       - the player can hit as many times as they want, if they go over 21 they
-#         bust and lose.
-#       - if the player stays then it's the dealers turn
-#     - The dealer has the same choices as the player but follows strict rules
-#       - if the dealer is less than 17 they will hit. if they go above 21 the
-#         player wins.
-#       - if the dealer is above or equal to 17 they will stay and both hands
-#         will be revealed and compared. They player with the higher number of
-#         points wins.
-#     - Card Values:
-#       2-10              = face value
-#       jack, queen, kind = 10
-#       ace               = 1 or 11
-#         - ace will be 11 unless it puts you over 21 in which case it will be 1
-#         - you can have more than one ace in your hand, if one of the aces can
-#         be 11 it will be, leaving the others to be 1's.
-#       
-# EXAMPLES
-#
-# DATA
-#   We will be representing a deck of cards where each card is tied to a
-#   integer value.
-#   We can evaluate the value seperately from the data, and as the ace's value
-#   changes we may want to do it on the fly.
-#     Hash might look like {diamonds: [ace, 2, 3, 4, 5...], spades: [ace, 2...] ... etc}
-#     Array using notation to set the suit [Ac, As, Ah, Ad, 2c, 2s, 2h, 2d....]
-#       -seems easier to pull cards from a big ol' array
-#     Nested array?
-#
-# ALGORITHM
-#   INITIALIZE GAME
-#     -build deck
-#      - for each suit
-#        put 2..10 plus suit notation in array
-#        put face card and ace plus suit notation in array
-#     -deal cards
-#       -assign each player a hand and populate it
-#      
-#   START PLAYER LOOP
-#     -display player hand and one card from dealer hand
-#     -run this loop until they bust or stay
-#     -evaluate hand and display total value of hand
-#     -ask if hit or stay
-#     -if hit
-#       -choose a random card that hasn't been dealt
-#     -display total value of hand
-#     -if bust LOSE
-#     -else
-#       ask if hit or stay
-#       
-#   START DEALER LOOP
-#     -run this loop until they bust or stay
-#     -if over 16 stay
-#     -else hit until over 16 or bust
-#     
-#   EVALUATE HANDS
-#     -compare each players hand value and determine winner
-#     
-#   DISPLAY WINNER
-#
-# CODE
-
 require "pry"
 
 def build_deck
@@ -98,25 +26,18 @@ def format_hand(hand, hide = 0)
   end
 end
 
-def winner(player_hand, dealer_hand)
-  player_value = evaluate_hand(hand_to_value(player_hand))
-  dealer_value = evaluate_hand(hand_to_value(dealer_hand))
-
-  if bust?(player_hand)
+def winner(players)
+  if players[:player][:bust]
     winner = "Dealer"
-  elsif bust?(dealer_hand)
+  elsif players[:dealer][:bust]
     winner = "Player" 
-  elsif player_value > dealer_value
+  elsif players[:player][:score] > players[:dealer][:score]
     winner = "Player"
-  elsif dealer_value > player_value
+  elsif players[:dealer][:score] > players[:player][:score]
     winner = "Dealer"
   else
     winner = "Tie"
   end
-end
-
-def bust?(hand)
-  evaluate_hand(hand_to_value(hand)) > 21
 end
 
 # Strips suit from cards and converts them to an array of integer that correspond to their value.
@@ -145,55 +66,74 @@ def evaluate_hand(hand_values)
   hand_values.sum
 end
 
-# Setup
-dealers_hand = []
-players_hand = []
-deck = build_deck
+def set_bust(player)
+  player[:bust] = true if player[:score] > 21
+end
 
-deal(deck, players_hand, 2)
-deal(deck, dealers_hand, 2)
-
-# Players turn
-loop do
-  system("clear")
-  puts "The dealers hand is: " + format_hand(dealers_hand, 1) + " and a second hidden card"
-  puts "Your hand is: " + format_hand(players_hand)
-  puts "Your hand is worth: #{evaluate_hand(hand_to_value(players_hand))} points."
-  answer = nil
-  loop do
-    puts "Would you like to hit or stay? ('h' or 's')"
-    answer = gets.chomp.downcase
-    break if answer == "h" || answer == "s"
-    puts "Please enter 'h' or 's'"
-  end
-
-  if answer == "h"
-    deal(deck, players_hand)
-    if bust?(players_hand)
-      puts "You went bust!"
-      break
-    end
-  elsif answer == "s"
-    break
+def set_score(players_hash)
+  players_hash.each do |player, player_stats|
+    player_stats[:score] = evaluate_hand(hand_to_value(player_stats[:hand]))
   end
 end
 
-# Dealer turn
+# Setup
+players = {dealer: {bust: false, score: nil, hand: []},
+          player: {bust: false, score: nil, hand: []}}
+        
 
+deck = build_deck
+active_player = players[:player]
+
+deal(deck, players[:player][:hand], 2)
+deal(deck, players[:dealer][:hand], 2)
+
+set_score(players)
+
+# Game loop
 loop do
-  break if bust?(players_hand)
-  
-  if bust?(dealers_hand)
-    puts "Dealer went bust!"
-    break
-  elsif evaluate_hand(hand_to_value(dealers_hand)) > 16
+  system("clear")
+
+  if active_player == players[:player]
+
+    puts "The dealers hand is: " + format_hand(players[:dealer][:hand], 1) + " and a second hidden card"
+    puts "Your hand is: " + format_hand(players[:player][:hand])
+    puts "Your hand is worth: #{players[:player][:score]} points."
+
+    choice = nil
+    loop do
+      puts "Would you like to hit or stay? ('h' or 's')"
+      choice = gets.chomp.downcase
+      break if choice == "h" || choice == "s"
+      puts "Please enter 'h' or 's'"
+    end
+
+  elsif active_player == players[:dealer]
+    if players[:dealer][:score] > 16
+      choice = "s"
+    else
+      choice = "h"
+    end
+  end
+
+  if choice == "h"
+    deal(deck, active_player[:hand])
+    set_score(players)
+    break if set_bust(active_player)
+  elsif choice == "s" && active_player == players[:dealer]
     break
   else
-    deal(deck, dealers_hand)
+    active_player = players[:dealer]
   end
 end
 
 # Display Results and play again
-puts "Your hand: " + format_hand(players_hand) + " worth: #{evaluate_hand(hand_to_value(players_hand))}"
-puts "Dealers hand: " + format_hand(dealers_hand) + " worth: #{evaluate_hand(hand_to_value(dealers_hand))}"
-puts "The winner is: #{winner(players_hand, dealers_hand)}"
+system("clear")
+if players[:player][:bust]
+  puts "You went bust!"
+elsif
+  players[:dealer][:bust]
+  puts "The dealer went bust!"
+end
+puts "Your hand: " + format_hand(players[:player][:hand]) + " worth: #{players[:player][:score]}"
+puts "Dealer's hand: " + format_hand(players[:dealer][:hand]) + " worth: #{players[:dealer][:score]}"
+puts "The winner is: #{winner(players)}"
