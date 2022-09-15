@@ -26,7 +26,7 @@ end
 
 def winner(player, dealer)
   if player[:bust]
-    :dealer_by_bust 
+    :dealer_by_bust
   elsif dealer[:bust]
     :player_by_bust
   elsif player[:score] > dealer[:score]
@@ -39,6 +39,7 @@ def winner(player, dealer)
 end
 
 def display_winner(winner)
+  puts
   case winner
   when :dealer
     puts "The Dealer won!"
@@ -53,24 +54,42 @@ def display_winner(winner)
   end
 end
 
-# Strips suit from cards and converts them to an array of integer that correspond to their value.
-# All aces are set to 11 by default. #evaluate_hand decides if an ace should be 11 or 1.
+def display_overall_winner(score)
+  puts
+  case score.key(5)
+  when :dealer
+    puts "--- The dealer is the first to five point and the winner! ---"
+  when :player
+    puts "--- You're the first to five points and the winner! ---"
+  end
+  puts
+end
+
+def display_overall_score(score)
+  puts "Player Score: #{score[:player]} Dealer Score: #{score[:dealer]}"
+  puts "-------------------------------"
+end
+
+# Strips suit from cards and converts them to an array of integers that
+# correspond to their value. All aces are set to 11 by default.
+# #evaluate_hand decides if an ace should be 11 or 1.
 def hand_to_value(hand)
   hand.map do |card|
-      if (2..10).include?(card.chop.to_i)
-        card.chop.to_i
-      elsif ["J", "Q", "K"].include?(card.chop)
-        10
-      else
-        11
-      end
+    if (2..10).include?(card.chop.to_i)
+      card.chop.to_i
+    elsif ["J", "Q", "K"].include?(card.chop)
+      10
+    else
+      11
+    end
   end
 end
 
-# Decides if an ace (11) should be a (1). Returns the sum of the hand after that decision.
+# Decides if an ace (11) should be a (1).
+# Returns the sum of the hand after that decision.
 def evaluate_hand(hand_values)
   loop do
-    if hand_values.sum > 21 && hand_values.include?(11)
+    if hand_values.sum > BUST_SCORE && hand_values.include?(11)
       hand_values[hand_values.index(11)] = 1
     else
       break
@@ -79,79 +98,110 @@ def evaluate_hand(hand_values)
   hand_values.sum
 end
 
-def set_bust(player)
-  player[:bust] = true if player[:score] > 21
+def update_bust(player)
+  player[:bust] = true if player[:score] > BUST_SCORE
 end
 
-def set_score(player)
+def update_score(player)
   player[:score] = evaluate_hand(hand_to_value(player[:hand]))
 end
 
-def stop_playing?
-  puts "Would you like to play again? (y/n)"
+def update_round_counter(round_winner, round_counter)
+  if round_winner.match?("dealer")
+    round_counter[:dealer] += 1
+  elsif round_winner.match?("player")
+    round_counter[:player] += 1
+  end
+end
+
+def play_again?
+  puts "=> Would you like to play again? (y/n)"
   answer = gets.chomp.downcase
 
   true if answer == "y"
 end
 
+# Game constants
+BUST_SCORE = 21
+DEALER_CUTOFF = 17
+
+# Main Loop
 loop do
-  # Setup
-  player = {bust: false, score: nil, hand: []}
-  dealer = {bust: false, score: nil, hand: []}
-          
+  round_counter = { player: 0, dealer: 0 }
 
-  deck = build_deck
-  active_player = player
-
-  deal(deck, player[:hand], 2)
-  deal(deck, dealer[:hand], 2)
-
-  set_score(player)
-  set_score(dealer)
-
-  # Game loop
   loop do
+    # Setup
+    player = { bust: false, score: nil, hand: [] }
+    dealer = { bust: false, score: nil, hand: [] }
+
+    deck = build_deck
+    active_player = player
+
+    deal(deck, player[:hand], 2)
+    deal(deck, dealer[:hand], 2)
+
+    update_score(player)
+    update_score(dealer)
+
+    # Game loop
+    loop do
+      system("clear")
+
+      if active_player == player
+
+        display_overall_score(round_counter)
+        puts "The dealer's hand is: #{format_hand(dealer[:hand], 1)} and ?"
+        puts "Your hand is: #{format_hand(player[:hand])}"
+        puts "Your hand is worth: #{player[:score]} points."
+        puts
+
+        choice = nil
+        loop do
+          puts "=> Would you like to hit or stay? ('h' or 's')"
+          choice = gets.chomp.downcase
+          break if choice == "h" || choice == "s"
+          puts "Please enter 'h' or 's'"
+        end
+
+      elsif active_player == dealer
+        choice = if dealer[:score] > DEALER_CUTOFF
+                   "s"
+                 else
+                   "h"
+                 end
+      end
+
+      if choice == "h"
+        deal(deck, active_player[:hand])
+        update_score(active_player)
+        break if update_bust(active_player)
+      elsif choice == "s" && active_player == dealer
+        break
+      else
+        active_player = dealer
+      end
+    end
+
+    # Display Results
     system("clear")
 
-    if active_player == player
+    round_winner = winner(player, dealer)
+    update_round_counter(round_winner, round_counter)
 
-      puts "The dealers hand is: " + format_hand(dealer[:hand], 1) + " and a second hidden card"
-      puts "Your hand is: " + format_hand(player[:hand])
-      puts "Your hand is worth: #{player[:score]} points."
+    display_overall_score(round_counter)
 
-      choice = nil
-      loop do
-        puts "Would you like to hit or stay? ('h' or 's')"
-        choice = gets.chomp.downcase
-        break if choice == "h" || choice == "s"
-        puts "Please enter 'h' or 's'"
-      end
+    puts "Your hand: #{format_hand(player[:hand])}. Worth: #{player[:score]}"
+    puts "Dealer hand: #{format_hand(dealer[:hand])}. Worth: #{dealer[:score]}"
 
-    elsif active_player == dealer
-      if dealer[:score] > 16
-        choice = "s"
-      else
-        choice = "h"
-      end
-    end
+    display_winner(round_winner)
 
-    if choice == "h"
-      deal(deck, active_player[:hand])
-      set_score(active_player)
-      break if set_bust(active_player)
-    elsif choice == "s" && active_player == dealer
-      break
-    else
-      active_player = dealer
-    end
+    break if round_counter.value?(5)
+
+    puts "=> Ready for the next round?"
+    gets.chomp
   end
 
-  # Display Results and play again
-  system("clear")
+  display_overall_winner(round_counter)
 
-  puts "Your hand: " + format_hand(player[:hand]) + ". Worth: #{player[:score]}"
-  puts "Dealer's hand: " + format_hand(dealer[:hand]) + ". Worth: #{dealer[:score]}"
-  display_winner(winner(player, dealer))
-
-  break if stop_playing?
+  break if !play_again?
 end
