@@ -65,9 +65,9 @@ def display_overall_winner(score)
   puts
 end
 
-def display_overall_score(score)
-  puts "Player Score: #{score[:player]} Dealer Score: #{score[:dealer]}"
-  puts "-------------------------------"
+def display_stats(score)
+  puts "Player Score: #{score[:player]} - Dealer Score: #{score[:dealer]} - Bust is #{BUST}"
+  puts "----------------------------------------------"
 end
 
 # Strips suit from cards and converts them to an array of integers that
@@ -89,7 +89,7 @@ end
 # Returns the sum of the hand after that decision.
 def evaluate_hand(hand_values)
   loop do
-    if hand_values.sum > BUST_SCORE && hand_values.include?(11)
+    if hand_values.sum > BUST && hand_values.include?(11)
       hand_values[hand_values.index(11)] = 1
     else
       break
@@ -99,7 +99,7 @@ def evaluate_hand(hand_values)
 end
 
 def update_bust(player)
-  player[:bust] = true if player[:score] > BUST_SCORE
+  player[:bust] = true if player[:score] > BUST
 end
 
 def update_score(player)
@@ -122,7 +122,7 @@ def play_again?
 end
 
 # Game constants
-BUST_SCORE = 21
+BUST = 21
 DEALER_CUTOFF = 17
 
 # Main Loop
@@ -149,10 +149,10 @@ loop do
 
       if active_player == player
 
-        display_overall_score(round_counter)
-        puts "The dealer's hand is: #{format_hand(dealer[:hand], 1)} and ?"
-        puts "Your hand is: #{format_hand(player[:hand])}"
-        puts "Your hand is worth: #{player[:score]} points."
+        display_stats(round_counter)
+        puts "The dealer's hand: #{format_hand(dealer[:hand], 1)} and ?"
+        puts
+        puts "Your hand: #{format_hand(player[:hand])}. Worth: #{player[:score]}"
         puts
 
         choice = nil
@@ -188,10 +188,11 @@ loop do
     round_winner = winner(player, dealer)
     update_round_counter(round_winner, round_counter)
 
-    display_overall_score(round_counter)
+    display_stats(round_counter)
 
-    puts "Your hand: #{format_hand(player[:hand])}. Worth: #{player[:score]}"
     puts "Dealer hand: #{format_hand(dealer[:hand])}. Worth: #{dealer[:score]}"
+    puts
+    puts "Your hand: #{format_hand(player[:hand])}. Worth: #{player[:score]}"
 
     display_winner(round_winner)
 
