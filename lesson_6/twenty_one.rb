@@ -1,10 +1,11 @@
 def build_deck
   deck = []
-  suits = ["d", "h", "c", "s"]
 
-  suits.each do |suit|
-    (2..10).each { |num| deck << num.to_s + suit }
-    ["J", "Q", "K", "A"].each { |face| deck << face + suit }
+  SUITS.each do |suit|
+    (2..10).each { |num| deck << { suit: suit.values[0], value: num.to_s } }
+    ["J", "Q", "K", "A"].each do |face|
+      deck << { suit: suit.values[0], value: face }
+    end
   end
 
   deck
@@ -13,14 +14,6 @@ end
 def deal(deck, hand, num_of_cards = 1)
   num_of_cards.times do |_|
     hand << deck.shuffle!.shift
-  end
-end
-
-def format_hand(hand, hide = 0)
-  if hide == 0
-    hand.join(', ')
-  elsif hide == 1
-    hand[0]
   end
 end
 
@@ -38,8 +31,52 @@ def winner(player, dealer)
   end
 end
 
-def display_winner(winner)
+def hide_cards(hand)
+  hand.map.with_index do |card, index|
+    if index == 0
+      card
+    else
+      { suit: "?", value: "?" }
+    end
+  end
+end
+
+def display_hand(hand)
+  print "╭───╮ " * hand.size
+
+  hand.each_with_index do |card, i|
+    puts if i == 0
+    print "│  #{card[:suit]}│ "
+  end
+
+  hand.each_with_index do |card, i|
+    puts if i == 0
+    print "│#{card[:value].ljust(3)}│ "
+  end
+
   puts
+  print "╰───╯ " * hand.size
+  puts
+end
+
+def display_table(player, dealer, show_score = true)
+  puts "Dealer's hand:"
+  if show_score == false
+    display_hand(hide_cards(dealer[:hand]))
+  else
+    display_hand(dealer[:hand])
+  end
+
+  puts "Worth: #{dealer[:score]}" if show_score == true
+  puts
+
+  puts "Your hand:"
+  display_hand(player[:hand])
+  puts "Worth: #{player[:score]}"
+  puts
+end
+
+def display_winner(winner)
   case winner
   when :dealer
     puts "The Dealer won!"
@@ -52,10 +89,10 @@ def display_winner(winner)
   when :tie
     puts "It's a tie!"
   end
+  puts
 end
 
 def display_overall_winner(score)
-  puts
   case score.key(5)
   when :dealer
     puts "--- The dealer is the first to five point and the winner! ---"
@@ -66,7 +103,8 @@ def display_overall_winner(score)
 end
 
 def display_stats(score)
-  puts "Player Score: #{score[:player]} - Dealer Score: #{score[:dealer]} - Bust is #{BUST}"
+  puts "Player Score: #{score[:player]} - Dealer Score: " \
+       "#{score[:dealer]} - Bust is #{BUST}"
   puts "----------------------------------------------"
 end
 
@@ -75,9 +113,9 @@ end
 # #evaluate_hand decides if an ace should be 11 or 1.
 def hand_to_value(hand)
   hand.map do |card|
-    if (2..10).include?(card.chop.to_i)
-      card.chop.to_i
-    elsif ["J", "Q", "K"].include?(card.chop)
+    if (2..10).include?(card[:value].to_i)
+      card[:value].to_i
+    elsif ["J", "Q", "K"].include?(card[:value])
       10
     else
       11
@@ -124,6 +162,10 @@ end
 # Game constants
 BUST = 21
 DEALER_CUTOFF = 17
+SUITS = [{ spades: "\u2660" },
+         { hearts: "\u2665" },
+         { diamonds: "\u2666" },
+         { clubs: "\u2663" }]
 
 # Main Loop
 loop do
@@ -150,12 +192,11 @@ loop do
       if active_player == player
 
         display_stats(round_counter)
-        puts "The dealer's hand: #{format_hand(dealer[:hand], 1)} and ?"
-        puts
-        puts "Your hand: #{format_hand(player[:hand])}. Worth: #{player[:score]}"
-        puts
+
+        display_table(player, dealer, false)
 
         choice = nil
+
         loop do
           puts "=> Would you like to hit or stay? ('h' or 's')"
           choice = gets.chomp.downcase
@@ -190,15 +231,13 @@ loop do
 
     display_stats(round_counter)
 
-    puts "Dealer hand: #{format_hand(dealer[:hand])}. Worth: #{dealer[:score]}"
-    puts
-    puts "Your hand: #{format_hand(player[:hand])}. Worth: #{player[:score]}"
+    display_table(player, dealer)
 
     display_winner(round_winner)
 
     break if round_counter.value?(5)
 
-    puts "=> Ready for the next round?"
+    puts "=> Press enter to go to the next round."
     gets.chomp
   end
 
