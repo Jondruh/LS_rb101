@@ -26,7 +26,7 @@
 
 def real_palindrome?(string)
   test_string = string.downcase
-  test_string = test_string.delete "^[a-z/d]"
+  test_string = test_string.delete("^a-z0-9")
   test_string == test_string.reverse
 end
 
