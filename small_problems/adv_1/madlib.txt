@@ -1,0 +1,4 @@
+Brookie the #{adjective} fish
+loved to #{adverb} #{verb}.
+That is, until he got his #{noun}
+stuck in a #{adjective} #{noun}.

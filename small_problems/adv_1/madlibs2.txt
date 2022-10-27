@@ -1,0 +1,4 @@
+Once upon a %{adjective} evening
+A %{adjective} frog %{verb} %{adverb}
+It's %{noun} was, %{adverb}, never the same.
+
